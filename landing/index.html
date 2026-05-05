@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Liftlab — AI marketing analyst for retail &amp; CPG</title>
+  <meta name="description" content="Connect your data warehouse, get a statistically validated post-campaign incrementality report and executive narrative in minutes instead of days." />
+  <meta property="og:title" content="Liftlab — AI marketing analyst for retail &amp; CPG" />
+  <meta property="og:description" content="Post-campaign incrementality reports in minutes, not days. Warehouse-native." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%237C5CFF'/%3E%3Cpath d='M14 46 L26 30 L36 38 L50 18' stroke='%23fff' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='50' cy='18' r='4' fill='%23fff'/%3E%3C/svg%3E" />
+  <style>
+    :root{
+      --bg:#0B0D14; --panel:#11141C; --panel2:#161A23; --line:#1F2433;
+      --text:#F5F7FA; --muted:#9AA3B2; --accent:#7C5CFF; --accent2:#22D3EE;
+      --green:#22C55E; --amber:#F59E0B;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+      line-height:1.55;-webkit-font-smoothing:antialiased}
+    a{color:var(--accent2);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+    nav{display:flex;align-items:center;justify-content:space-between;padding:24px 0}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px}
+    .brand-icon{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#7C5CFF,#22D3EE);
+      display:flex;align-items:center;justify-content:center;font-size:18px}
+    .nav-links{display:flex;gap:22px;align-items:center}
+    .nav-links a{color:var(--muted);font-weight:500;font-size:14px}
+    .nav-links a:hover{color:var(--text);text-decoration:none}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:10px;
+      font-weight:600;font-size:15px;cursor:pointer;border:1px solid transparent;transition:all .15s}
+    .btn-primary{background:var(--accent);color:#fff}
+    .btn-primary:hover{background:#6845ff;text-decoration:none;transform:translateY(-1px)}
+    .btn-ghost{background:transparent;color:var(--text);border-color:var(--line)}
+    .btn-ghost:hover{border-color:var(--accent);text-decoration:none}
+
+    .hero{padding:72px 0 96px;text-align:center;position:relative;overflow:hidden}
+    .hero::before{content:"";position:absolute;inset:-120px;background:
+      radial-gradient(40% 50% at 50% 30%,rgba(124,92,255,.18),transparent 60%),
+      radial-gradient(35% 45% at 80% 60%,rgba(34,211,238,.14),transparent 60%);
+      pointer-events:none;z-index:0}
+    .hero > *{position:relative;z-index:1}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;
+      background:rgba(124,92,255,.12);color:var(--accent);font-size:13px;font-weight:600;
+      border:1px solid rgba(124,92,255,.25);margin-bottom:24px}
+    .pill .dot{width:6px;height:6px;background:var(--accent);border-radius:50%}
+    h1{font-size:52px;line-height:1.08;margin:0 0 20px;letter-spacing:-0.02em;font-weight:800}
+    h1 .grad{background:linear-gradient(90deg,#A78BFA,#22D3EE);-webkit-background-clip:text;
+      background-clip:text;color:transparent}
+    .sub{font-size:19px;color:var(--muted);max-width:680px;margin:0 auto 36px}
+    .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:64px}
+    .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+    .stat .num{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+    .stat .lbl{font-size:13px;color:var(--muted);margin-top:4px}
+
+    section{padding:80px 0;border-top:1px solid var(--line)}
+    h2{font-size:34px;margin:0 0 14px;letter-spacing:-0.02em;font-weight:800}
+    .lead{color:var(--muted);font-size:17px;max-width:640px;margin-bottom:48px}
+
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px;
+      transition:border-color .2s}
+    .card:hover{border-color:rgba(124,92,255,.4)}
+    .card h3{margin:0 0 8px;font-size:18px}
+    .card p{margin:0;color:var(--muted);font-size:15px}
+    .card .step{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.08em;
+      text-transform:uppercase;margin-bottom:10px}
+
+    .compare{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+    .compare table{width:100%;border-collapse:collapse}
+    .compare th,.compare td{padding:16px 22px;text-align:left;border-bottom:1px solid var(--line);font-size:15px}
+    .compare th{background:var(--panel2);color:var(--muted);font-weight:600;font-size:13px;
+      text-transform:uppercase;letter-spacing:.06em}
+    .compare td:first-child{color:var(--muted)}
+    .compare .good{color:var(--green);font-weight:600}
+    .compare .bad{color:#EF4444}
+    .compare tr:last-child td{border-bottom:none}
+
+    .demo-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:34px;
+      text-align:center}
+    .demo-card .num{font-size:64px;font-weight:800;letter-spacing:-0.03em;
+      background:linear-gradient(90deg,#A78BFA,#22D3EE);-webkit-background-clip:text;
+      background-clip:text;color:transparent;line-height:1}
+    .demo-card .num-lbl{color:var(--muted);font-size:14px;margin-top:6px}
+    .demo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin:28px 0}
+    .demo-grid .num{font-size:36px}
+
+    .founder{display:flex;gap:30px;align-items:flex-start}
+    .avatar{width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#7C5CFF,#22D3EE);
+      display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:#fff;
+      flex-shrink:0}
+    .founder h3{margin:0 0 6px;font-size:22px}
+    .founder .role{color:var(--muted);margin-bottom:14px;font-size:14px}
+    .founder p{margin:0;color:var(--muted)}
+
+    footer{padding:40px 0 60px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;
+      display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px}
+
+    @media (max-width: 760px){
+      h1{font-size:36px}
+      .stats{grid-template-columns:repeat(2,1fr)}
+      .grid-2,.grid-3,.demo-grid{grid-template-columns:1fr}
+      .nav-links{display:none}
+      .founder{flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <div class="brand">
+        <div class="brand-icon">📈</div>
+        <span>Liftlab</span>
+      </div>
+      <div class="nav-links">
+        <a href="#problem">Problem</a>
+        <a href="#how">How it works</a>
+        <a href="#numbers">By the numbers</a>
+        <a href="#founder">Founder</a>
+        <a class="btn btn-primary" href="#demo">Launch demo →</a>
+      </div>
+    </nav>
+
+    <section class="hero" style="border:none;padding-top:48px">
+      <div class="pill"><span class="dot"></span> Live demo · synthetic data · no signup</div>
+      <h1>
+        Post-campaign incrementality<br/>
+        reports in <span class="grad">minutes, not days.</span>
+      </h1>
+      <p class="sub">
+        Liftlab is a warehouse-native AI analyst for retail and CPG marketing teams.
+        It designs the test/control split, runs the post-campaign analysis with
+        statistical rigor, and writes the executive summary — automatically.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#demo">Try the live demo →</a>
+        <a class="btn btn-ghost" href="#how">See how it works</a>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="num">~7s</div><div class="lbl">end-to-end pipeline (100K HHs)</div></div>
+        <div class="stat"><div class="num">2 days → minutes</div><div class="lbl">analyst turnaround</div></div>
+        <div class="stat"><div class="num">$50–200K</div><div class="lbl">agency cost replaced per campaign</div></div>
+        <div class="stat"><div class="num">90/10</div><div class="lbl">stratified TVC out of the box</div></div>
+      </div>
+    </section>
+
+    <section id="problem">
+      <h2>Every retailer runs this exact workflow.<br/>Almost none do it well.</h2>
+      <p class="lead">
+        Marketing teams at major retailers run hundreds of A/B-tested campaigns a year across email, push, and SMS.
+        Measuring whether a campaign actually drove incremental sales — vs noise — requires a full stack:
+        stratified test/control populations, channel-level engagement aggregation, statistical
+        significance testing, segment-level breakdowns, and a CMO-ready report.
+        Today this takes a 4-to-6-person team two full days per campaign.
+      </p>
+
+      <div class="compare">
+        <table>
+          <tr><th></th><th>The status quo</th><th>With Liftlab</th></tr>
+          <tr><td>Time per campaign analysis</td><td class="bad">2 days</td><td class="good">~10 minutes</td></tr>
+          <tr><td>Team required</td><td class="bad">4–6 analysts &amp; engineers</td><td class="good">1 marketer</td></tr>
+          <tr><td>Cost per campaign (mid-market via agency)</td><td class="bad">$50–200K</td><td class="good">included</td></tr>
+          <tr><td>Statistical rigor (p-values, segment lifts)</td><td>Manual, error-prone</td><td class="good">Built-in</td></tr>
+          <tr><td>Where the data goes</td><td>Pulled into spreadsheets</td><td class="good">Stays in your warehouse</td></tr>
+          <tr><td>Executive narrative</td><td>Hand-written each time</td><td class="good">Auto-generated, grounded in numbers</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section id="how">
+      <h2>How it works</h2>
+      <p class="lead">
+        Liftlab connects read-only to your BigQuery, Snowflake, or Redshift,
+        runs SQL templates inside the warehouse, and ships an executive report.
+        Try the live version below — it runs end-to-end on synthetic data
+        in about seven seconds.
+      </p>
+      <div class="grid-3">
+        <div class="card">
+          <div class="step">Step 1</div>
+          <h3>Stratified TVC split</h3>
+          <p>90/10 (configurable) test/control split balanced across customer
+            segment, persona, channel mix, and division. Falls back to random
+            for tiny strata. Includes a post-hoc balance verification.</p>
+        </div>
+        <div class="card">
+          <div class="step">Step 2</div>
+          <h3>Engagement &amp; ops integrity</h3>
+          <p>Per-channel send / open / click / unsub aggregation. Validates
+            that the test side actually got the comm and the control hold-out
+            stayed clean — the check that catches broken campaigns before
+            the wrong number ships.</p>
+        </div>
+        <div class="card">
+          <div class="step">Step 3</div>
+          <h3>Incrementality + significance</h3>
+          <p>Per-HH lift %, incremental net sales / units / visits,
+            Welch's two-sample t-tests for significance, segment-level
+            breakdowns across every customer dimension.</p>
+        </div>
+        <div class="card">
+          <div class="step">Step 4</div>
+          <h3>Auto-narrated executive summary</h3>
+          <p>Headline numbers, channel performance, best/worst segments
+            with p-values, operational integrity, and recommended next
+            experiments — generated from the actual analysis output.</p>
+        </div>
+        <div class="card">
+          <div class="step">Step 5</div>
+          <h3>Multi-sheet Excel deliverable</h3>
+          <p>Executive Summary, Incrementality, Engagement, Daily Engagement,
+            Ops Efficiency, TVC Balance, plus one sheet per segment dimension.
+            Drop-in-ready for your existing reporting template.</p>
+        </div>
+        <div class="card">
+          <div class="step">Step 6</div>
+          <h3>Warehouse-native</h3>
+          <p>SQL templates run inside your BigQuery / Snowflake / Redshift.
+            No data movement, no separate cluster, no compliance review.
+            Read-only, audit-logged.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="numbers" class="demo-card">
+      <div style="font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">Sample run · synthetic Spring Grocery campaign</div>
+      <h2 style="margin-bottom:6px">Headline result</h2>
+      <p style="color:var(--muted);margin-top:0">100K reachable households · 90/10 split · 2-week comms window · 4-week observation</p>
+
+      <div class="demo-grid">
+        <div><div class="num">+3.94%</div><div class="num-lbl">Net sales / HH lift</div></div>
+        <div><div class="num">$847K</div><div class="num-lbl">Incremental net sales</div></div>
+        <div><div class="num">0.0011</div><div class="num-lbl">p-value (highly significant)</div></div>
+        <div><div class="num">+11.9%</div><div class="num-lbl">Lift in Wellness persona</div></div>
+      </div>
+
+      <div style="margin-top:18px;color:var(--muted);font-size:14px">
+        Ops integrity: 97.43% of control received no communication · 96.80% of test received the right comm.
+        Units / HH lift +4.62% (p &lt; 0.0001). Family persona showed flat response (–0.41%, not significant) — a candidate for creative-variant testing.
+      </div>
+    </section>
+
+    <section id="demo" style="text-align:center">
+      <h2>Try the live demo</h2>
+      <p class="lead" style="margin-left:auto;margin-right:auto">
+        100% synthetic data. No signup, no email, no API key required.
+        Click through the five steps and download the Excel report.
+      </p>
+      <a class="btn btn-primary" id="demo-link" href="#" style="font-size:17px;padding:16px 26px">
+        Launch live demo →
+      </a>
+      <p style="color:var(--muted);font-size:13px;margin-top:14px">
+        <em>(Live demo URL is wired up after Streamlit Cloud deploy. Until then, run <code style="background:var(--panel2);padding:2px 6px;border-radius:4px">streamlit run app.py</code> locally.)</em>
+      </p>
+    </section>
+
+    <section id="founder">
+      <h2>Built by someone who's lived it</h2>
+      <div class="founder card">
+        <div class="avatar">VK</div>
+        <div>
+          <h3>Vamshi Krishna Emmadi · Founder</h3>
+          <div class="role">Previously: CRM analytics for one of the largest US grocers</div>
+          <p>
+            For the past few years I've personally run hundreds of post-campaign
+            incrementality analyses for marketing campaigns reaching tens of
+            millions of households across email, push, and SMS. I know exactly
+            what the workflow looks like, where it breaks, and what a marketing
+            team actually needs from a report. Liftlab is the product I wished
+            existed every Friday afternoon for the last three years.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div>© 2026 Liftlab · All numbers shown are from a synthetic data generator.</div>
+      <div><a href="https://github.com">GitHub</a> · <a href="mailto:hello@liftlab.ai">hello@liftlab.ai</a></div>
+    </footer>
+  </div>
+
+  <script>
+    // The demo URL is injected at deploy time. Until then we point to localhost.
+    (function(){
+      var url = window.LIFTLAB_DEMO_URL || "http://localhost:8501";
+      document.getElementById("demo-link").href = url;
+    })();
+  </script>
+</body>
+</html>
