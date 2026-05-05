@@ -33,6 +33,7 @@ from liftlab.analysis import compute_incrementality, segment_incrementality
 from liftlab.analysis.engagement import engagement_summary, daily_engagement, ops_efficiency
 from liftlab.insights import generate_executive_summary
 from liftlab.report import build_excel_report
+from liftlab.events import apply_event_targeting, list_events, EVENT_PRESETS
 
 
 st.set_page_config(
@@ -69,7 +70,18 @@ st.divider()
 # ===========================================================================
 with st.sidebar:
     st.subheader("Campaign configuration")
-    campaign_name = st.text_input("Campaign name", "Spring Grocery Push 2026")
+
+    event_choice = st.selectbox(
+        "Campaign event (optional)",
+        list_events(),
+        index=0,
+        help="Pick a retail seasonal event to auto-target the right "
+             "personas/segments and get an AI narrative explaining the "
+             "targeting logic.",
+    )
+    _preset = EVENT_PRESETS[event_choice]
+    default_name = _preset.short if not event_choice.startswith("None") else "Spring Grocery Push 2026"
+    campaign_name = st.text_input("Campaign name", default_name)
     n_households = st.select_slider(
         "Population size (households)",
         options=[10_000, 50_000, 100_000, 250_000, 500_000],
@@ -182,14 +194,29 @@ else:
                 st.error(f"Unexpected error reading CSV: {e}")
 
 if state["population"] is not None:
-    df = state["population"]
+    raw_df = state["population"]
+    if state.get("_targeted_event") != event_choice:
+        df_filtered, info = apply_event_targeting(raw_df, event_choice)
+        state["population_targeted"] = df_filtered
+        state["targeting_info"] = info
+        state["_targeted_event"] = event_choice
+
+    df = state["population_targeted"]
+    info = state["targeting_info"]
+
+    if not event_choice.startswith("None"):
+        st.info(info["narrative_md"])
+
     with c2:
         a, b, c, d = st.columns(4)
-        a.metric("Reachable HHs", f"{len(df):,}")
+        a.metric("Targeted HHs", f"{len(df):,}",
+                 delta=f"-{info['drop_pct']:.0f}%" if info["drop_pct"] > 0 else None,
+                 delta_color="off")
         b.metric("Avg pre-period weekly $", f"${df['pre_weekly_net_sales'].mean():.2f}")
         c.metric("eCom indexed HHs", f"{(df['ecom_ind']==1).sum():,}")
         d.metric("Load time", f"{state['gen_time']:.2f}s")
-        st.caption(f"Source: **{state.get('population_source', 'synthetic')}**")
+        st.caption(f"Source: **{state.get('population_source', 'synthetic')}** · "
+                   f"Event: **{event_choice}**")
     with st.expander("Peek at the population"):
         st.dataframe(df.head(20), use_container_width=True)
         if "my_needs_segment" in df.columns:
@@ -213,7 +240,7 @@ with c1:
     if st.button("Create TVC split", type="primary", use_container_width=True, disabled=disabled):
         with st.spinner("Stratifying across segment, persona, channel mix, division…"):
             t0 = time.time()
-            split = create_tvc_split(state["population"], test_ratio=test_ratio, seed=int(seed))
+            split = create_tvc_split(state["population_targeted"], test_ratio=test_ratio, seed=int(seed))
             state["split"] = split
             state["balance"] = balance_report(split)
             state["split_time"] = time.time() - t0
