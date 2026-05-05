@@ -90,6 +90,12 @@ def generate_population(
     return df
 
 
+def channel_mix_label(df: pd.DataFrame) -> pd.Series:
+    """Return the canonical channel-mix label for each row, e.g. '4.Email+Push'.
+    Public so the loader module can apply the same logic to uploaded CSVs."""
+    return _channel_mix_label(df)
+
+
 def _channel_mix_label(df: pd.DataFrame) -> pd.Series:
     e, p, s = df["email_flag"], df["push_flag"], df["sms_flag"]
     conds = [

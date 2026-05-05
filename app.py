@@ -19,7 +19,13 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from liftlab.data import generate_population
+from liftlab.data import (
+    generate_population,
+    load_population_from_csv,
+    CSVValidationError,
+    REQUIRED_COLUMNS,
+    OPTIONAL_DEFAULTS,
+)
 from liftlab.splits import create_tvc_split, balance_report
 from liftlab.simulation import simulate_campaign
 from liftlab.simulation.campaign import ChannelConfig
@@ -107,18 +113,73 @@ def _bump(step: int) -> None:
 
 
 # ===========================================================================
-# Step 1: Generate population
+# Step 1: Load population (synthetic OR uploaded CSV)
 # ===========================================================================
-st.subheader("1. Generate the customer population")
-c1, c2 = st.columns([1, 3])
-with c1:
-    if st.button("Generate population", type="primary", use_container_width=True):
-        with st.spinner(f"Generating {n_households:,} synthetic households…"):
-            t0 = time.time()
-            df = generate_population(n_households=n_households, seed=int(seed))
-            state["population"] = df
-            state["gen_time"] = time.time() - t0
-        _bump(1)
+st.subheader("1. Bring your customer population")
+
+mode = st.radio(
+    "Data source",
+    ["Generate synthetic", "Upload my own CSV"],
+    horizontal=True,
+    label_visibility="collapsed",
+    key="data_source",
+)
+
+if mode == "Generate synthetic":
+    c1, c2 = st.columns([1, 3])
+    with c1:
+        if st.button("Generate population", type="primary", use_container_width=True):
+            with st.spinner(f"Generating {n_households:,} synthetic households…"):
+                t0 = time.time()
+                df = generate_population(n_households=n_households, seed=int(seed))
+                state["population"] = df
+                state["population_source"] = "synthetic"
+                state["gen_time"] = time.time() - t0
+            _bump(1)
+
+else:
+    c1, c2 = st.columns([1, 3])
+    with c1:
+        with st.expander("Required CSV schema", expanded=False):
+            st.markdown(
+                f"""
+                **Required columns:**
+                - `household_id` (integer, unique)
+                - `email_flag`, `push_flag`, `sms_flag` (each 0 or 1)
+                - `pre_weekly_net_sales` (float, $/week)
+
+                **Optional columns** (auto-filled if missing):
+                - `division_id`, `my_needs_segment`, `persona`, `facts_seg`
+                - `ecom_ind`, `rewards_engaged`
+                """
+            )
+
+        sample_df = generate_population(n_households=50_000, seed=42)
+        st.download_button(
+            "Download sample CSV (50K HHs)",
+            data=sample_df.to_csv(index=False).encode("utf-8"),
+            file_name="liftlab_sample_population.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+        uploaded = st.file_uploader(
+            "Upload population CSV", type=["csv"], label_visibility="collapsed"
+        )
+        if uploaded is not None and st.button(
+            "Load uploaded data", type="primary", use_container_width=True
+        ):
+            try:
+                with st.spinner("Parsing and validating CSV…"):
+                    t0 = time.time()
+                    df = load_population_from_csv(uploaded)
+                    state["population"] = df
+                    state["population_source"] = f"uploaded ({uploaded.name})"
+                    state["gen_time"] = time.time() - t0
+                _bump(1)
+            except CSVValidationError as e:
+                st.error(str(e))
+            except Exception as e:
+                st.error(f"Unexpected error reading CSV: {e}")
 
 if state["population"] is not None:
     df = state["population"]
@@ -127,15 +188,17 @@ if state["population"] is not None:
         a.metric("Reachable HHs", f"{len(df):,}")
         b.metric("Avg pre-period weekly $", f"${df['pre_weekly_net_sales'].mean():.2f}")
         c.metric("eCom indexed HHs", f"{(df['ecom_ind']==1).sum():,}")
-        d.metric("Generation time", f"{state['gen_time']:.2f}s")
+        d.metric("Load time", f"{state['gen_time']:.2f}s")
+        st.caption(f"Source: **{state.get('population_source', 'synthetic')}**")
     with st.expander("Peek at the population"):
         st.dataframe(df.head(20), use_container_width=True)
-        seg_chart = (df.groupby("my_needs_segment").size().reset_index(name="hhs"))
-        st.plotly_chart(
-            px.bar(seg_chart, x="my_needs_segment", y="hhs",
-                   title="Household distribution by my-needs segment"),
-            use_container_width=True,
-        )
+        if "my_needs_segment" in df.columns:
+            seg_chart = (df.groupby("my_needs_segment").size().reset_index(name="hhs"))
+            st.plotly_chart(
+                px.bar(seg_chart, x="my_needs_segment", y="hhs",
+                       title="Household distribution by my-needs segment"),
+                use_container_width=True,
+            )
 
 st.divider()
 

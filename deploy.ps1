@@ -15,98 +15,111 @@
 #
 # Total user-facing work after `gh auth login`: 1 click.
 
-$ErrorActionPreference = "Stop"
+# Don't auto-stop on stderr from native commands (gh writes status to stderr).
+$ErrorActionPreference = "Continue"
+
+function Fail($msg) {
+    Write-Host ""
+    Write-Host "ERROR: $msg" -ForegroundColor Red
+    exit 1
+}
 
 # ---------- 0. Sanity checks ----------
 Write-Host "Checking prerequisites..." -ForegroundColor Cyan
 
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
-    Write-Error "GitHub CLI ('gh') is not on PATH. Install with: winget install GitHub.cli"
-    exit 1
+    Fail "GitHub CLI ('gh') is not on PATH. Install with: winget install GitHub.cli"
 }
 
-$auth = (gh auth status 2>&1 | Out-String)
-if ($auth -match "not logged" -or $LASTEXITCODE -ne 0) {
+gh auth status *> $null
+if ($LASTEXITCODE -ne 0) {
     Write-Host ""
     Write-Host "  You're not logged in to GitHub yet. Run this once:" -ForegroundColor Yellow
     Write-Host "      gh auth login" -ForegroundColor White
-    Write-Host "  Pick:  GitHub.com  ->  HTTPS  ->  Yes (auth git with creds)  ->  Login with a web browser"
-    Write-Host "  Then re-run this script." -ForegroundColor Yellow
+    Write-Host "  Pick:  GitHub.com  ->  HTTPS  ->  Login with a web browser" -ForegroundColor Yellow
     exit 1
 }
 
 if (-not (Test-Path ".git")) {
-    Write-Error "No git repo found in this folder. Run from the liftlab_demo/ root."
-    exit 1
+    Fail "No git repo found in this folder. Run from the liftlab_demo/ root."
 }
 
-# ---------- 1. Create + push the GitHub repo ----------
-$existing = (gh repo view --json url 2>$null) | Out-String
-if ($existing -match "url") {
-    Write-Host "Repo already exists on GitHub, pushing latest commits..." -ForegroundColor Cyan
-    git push origin main
+# ---------- 1. Create or update the GitHub repo ----------
+$user = (gh api user -q .login 2>$null)
+if (-not $user) { Fail "Could not read GitHub username from gh CLI." }
+Write-Host "GitHub user: $user" -ForegroundColor Cyan
+
+# Detect if a remote repo already exists.
+gh repo view "$user/liftlab" *> $null
+$repoExists = ($LASTEXITCODE -eq 0)
+
+if ($repoExists) {
+    Write-Host "Repo $user/liftlab already exists on GitHub." -ForegroundColor Cyan
+    # Make sure 'origin' points at it.
+    git remote remove origin 2>$null | Out-Null
+    git remote add origin "https://github.com/$user/liftlab.git"
+    Write-Host "Pushing latest commits..." -ForegroundColor Cyan
+    git push -u origin main
+    if ($LASTEXITCODE -ne 0) { Fail "git push failed." }
 } else {
-    Write-Host "Creating public GitHub repo 'liftlab' and pushing..." -ForegroundColor Cyan
+    Write-Host "Creating public GitHub repo '$user/liftlab' and pushing..." -ForegroundColor Cyan
     gh repo create liftlab `
         --public `
         --source=. `
         --remote=origin `
         --push `
         --description "AI marketing analyst for retail & CPG incrementality testing"
+    if ($LASTEXITCODE -ne 0) { Fail "gh repo create failed." }
 }
 
-# ---------- 2. Enable GitHub Pages on /landing ----------
-Write-Host "Enabling GitHub Pages for the landing page..." -ForegroundColor Cyan
+$repoSlug = "$user/liftlab"
+$repoUrl  = "https://github.com/$repoSlug"
 
-$repoSlug = (gh repo view --json nameWithOwner -q .nameWithOwner)
-$user = $repoSlug.Split("/")[0]
-$repo = $repoSlug.Split("/")[1]
+# ---------- 2. Publish the landing page via GitHub Pages (/docs on main) ----------
+Write-Host "Publishing landing page to GitHub Pages..." -ForegroundColor Cyan
 
-# Pages can serve from / or /docs on a branch. We'll publish from /landing
-# by copying it to /docs. Cleanest cross-platform approach.
 if (-not (Test-Path "docs")) { New-Item -ItemType Directory -Path docs | Out-Null }
 Copy-Item -Path "landing\*" -Destination "docs\" -Recurse -Force
-git add docs
-git diff --cached --quiet; if ($LASTEXITCODE -ne 0) {
+
+git add docs 2>$null | Out-Null
+git diff --cached --quiet
+if ($LASTEXITCODE -ne 0) {
     git -c user.email="$user@users.noreply.github.com" -c user.name="$user" `
-        commit -m "Publish landing page via GitHub Pages (/docs)"
-    git push origin main
+        commit -m "Publish landing page via GitHub Pages (/docs)" | Out-Null
+    git push origin main | Out-Null
 }
 
-try {
-    gh api `
-        --method POST `
-        -H "Accept: application/vnd.github+json" `
-        "/repos/$repoSlug/pages" `
-        -f source[branch]=main `
-        -f source[path]=/docs 2>&1 | Out-Null
-} catch {
-    # Already enabled — fine.
-}
+# Enable Pages (idempotent — ignore 'already enabled' errors).
+gh api `
+    --method POST `
+    -H "Accept: application/vnd.github+json" `
+    "/repos/$repoSlug/pages" `
+    -f "source[branch]=main" `
+    -f "source[path]=/docs" *> $null
 
-$pagesUrl = "https://$user.github.io/$repo/"
-Write-Host ""
-Write-Host "Landing page URL (live in ~60s):" -ForegroundColor Green
-Write-Host "    $pagesUrl" -ForegroundColor White
+$pagesUrl = "https://$user.github.io/liftlab/"
 
-# ---------- 3. Open Streamlit Cloud deploy page pre-filled ----------
-$repoUrl = "https://github.com/$repoSlug"
+# ---------- 3. Open Streamlit Cloud deploy page + landing page + repo ----------
 $streamlitDeploy = "https://share.streamlit.io/deploy?repository=$repoUrl&branch=main&mainModule=app.py"
 
 Write-Host ""
-Write-Host "Opening Streamlit Community Cloud deploy page..." -ForegroundColor Cyan
-Write-Host "  Just click the 'Deploy' button. First boot takes ~3 minutes."
-Write-Host "  You'll get a URL like https://<your-app>.streamlit.app"
+Write-Host "==================================================================" -ForegroundColor Green
+Write-Host "  GITHUB REPO:    $repoUrl" -ForegroundColor White
+Write-Host "  LANDING PAGE:   $pagesUrl  (live in ~60 seconds)" -ForegroundColor White
+Write-Host "  STREAMLIT APP:  click Deploy in the browser tab opening now" -ForegroundColor White
+Write-Host "==================================================================" -ForegroundColor Green
+Write-Host ""
 
 Start-Process $streamlitDeploy
+Start-Sleep -Seconds 1
 Start-Process $pagesUrl
+Start-Sleep -Seconds 1
 Start-Process $repoUrl
 
-Write-Host ""
-Write-Host "Done. Three browser tabs opened:" -ForegroundColor Green
-Write-Host "    1. Streamlit Cloud deploy page  (click 'Deploy')"
-Write-Host "    2. Your live landing page (may take 60s for first build)"
+Write-Host "Three browser tabs opened:" -ForegroundColor Green
+Write-Host "    1. Streamlit Cloud deploy page  -> click 'Deploy' (one click)"
+Write-Host "    2. Your live landing page       -> may take ~60s for first build"
 Write-Host "    3. Your GitHub repo"
 Write-Host ""
-Write-Host "After Streamlit deploys, edit landing/index.html and replace LIFTLAB_DEMO_URL"
-Write-Host "with your live https://<app>.streamlit.app URL, then commit and push."
+Write-Host "After Streamlit gives you a URL like https://<name>.streamlit.app:"
+Write-Host "  paste it back to the assistant and it will wire it into the landing page."
