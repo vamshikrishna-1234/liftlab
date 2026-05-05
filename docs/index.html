@@ -122,7 +122,7 @@
         <a href="#how">How it works</a>
         <a href="#numbers">By the numbers</a>
         <a href="#founder">Founder</a>
-        <a class="btn btn-primary" href="#demo">Launch demo →</a>
+        <a class="btn btn-primary" href="https://liftlabai.streamlit.app/" target="_blank" rel="noopener">Launch demo →</a>
       </div>
     </nav>
 
@@ -252,11 +252,11 @@
         100% synthetic data. No signup, no email, no API key required.
         Click through the five steps and download the Excel report.
       </p>
-      <a class="btn btn-primary" id="demo-link" href="#" style="font-size:17px;padding:16px 26px">
+      <a class="btn btn-primary" id="demo-link" href="https://liftlabai.streamlit.app/" target="_blank" rel="noopener" style="font-size:17px;padding:16px 26px">
         Launch live demo →
       </a>
       <p style="color:var(--muted);font-size:13px;margin-top:14px">
-        <em>(Live demo URL is wired up after Streamlit Cloud deploy. Until then, run <code style="background:var(--panel2);padding:2px 6px;border-radius:4px">streamlit run app.py</code> locally.)</em>
+        Opens in a new tab · Hosted on Streamlit Cloud · 100% synthetic data
       </p>
     </section>
 
@@ -286,11 +286,9 @@
   </div>
 
   <script>
-    // The demo URL is injected at deploy time. Until then we point to localhost.
-    (function(){
-      var url = window.LIFTLAB_DEMO_URL || "http://localhost:8501";
-      document.getElementById("demo-link").href = url;
-    })();
+    document.getElementById("demo-link").href = "https://liftlabai.streamlit.app/";
+    document.getElementById("demo-link").target = "_blank";
+    document.getElementById("demo-link").rel = "noopener";
   </script>
 </body>
 </html>
